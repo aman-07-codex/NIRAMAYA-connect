@@ -1,4 +1,4 @@
-import { Phone, MapPin, Award } from "lucide-react";
+import { Phone, MapPin, Award, Star } from "lucide-react";
 import { DonorWithMeta } from "@/lib/donors";
 import EligibilityBadge from "./EligibilityBadge";
 import AvailabilityBadge from "./AvailabilityBadge";
@@ -13,7 +13,7 @@ const DonorCard = ({ donor, emergency }: Props) => (
   <div
     className={cn(
       "relative rounded-lg border bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1",
-      emergency && donor.available && donor.eligible && "border-emergency bg-emergency-bg pulse-emergency"
+      emergency && donor.available && donor.eligibility === "eligible" && "border-emergency bg-emergency-bg pulse-emergency"
     )}
   >
     {donor.bestMatch && (
@@ -21,7 +21,7 @@ const DonorCard = ({ donor, emergency }: Props) => (
         <Award className="h-3 w-3" /> Best Match
       </span>
     )}
-    {emergency && donor.available && donor.eligible && (
+    {emergency && donor.available && donor.eligibility === "eligible" && (
       <span className="absolute -top-2.5 left-3 inline-flex items-center rounded-full bg-emergency px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
         URGENT
       </span>
@@ -41,13 +41,28 @@ const DonorCard = ({ donor, emergency }: Props) => (
     </div>
 
     <div className="mt-3 flex flex-wrap items-center gap-2">
-      <EligibilityBadge eligible={donor.eligible} />
+      <EligibilityBadge status={donor.eligibility} />
       <AvailabilityBadge available={donor.available} />
       {donor.distance !== null && (
-        <span className="text-xs text-muted-foreground">
-          ~{donor.distance.toFixed(1)} km away
-        </span>
+        <span className="text-xs text-muted-foreground">~{donor.distance.toFixed(1)} km</span>
       )}
+    </div>
+
+    {/* Match Score Bar */}
+    <div className="mt-3">
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-muted-foreground flex items-center gap-1"><Star className="h-3 w-3" /> Match Score</span>
+        <span className="font-semibold text-foreground">{donor.matchScore}%</span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            donor.matchScore >= 70 ? "bg-success" : donor.matchScore >= 40 ? "bg-warning" : "bg-destructive"
+          )}
+          style={{ width: `${donor.matchScore}%` }}
+        />
+      </div>
     </div>
 
     <div className="mt-4">

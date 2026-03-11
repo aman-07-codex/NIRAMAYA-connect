@@ -3,13 +3,13 @@ import { Search, Droplets, MapPin, Heart, Users, Shield, ArrowRight, Phone } fro
 import logo from "@/assets/logo.png";
 import { BLOOD_GROUPS } from "@/lib/donors";
 import { SAMPLE_DONORS } from "@/lib/sample-data";
-import { isEligible } from "@/lib/eligibility";
+import { getEligibilityStatus } from "@/lib/eligibility";
 import StatsCard from "@/components/StatsCard";
 
 const Index = () => {
   const totalDonors = SAMPLE_DONORS.length;
   const availableDonors = SAMPLE_DONORS.filter((d) => d.available).length;
-  const eligibleDonors = SAMPLE_DONORS.filter((d) => isEligible(d.last_donation)).length;
+  const eligibleDonors = SAMPLE_DONORS.filter((d) => getEligibilityStatus(d) === "eligible").length;
 
   return (
     <div className="flex flex-col">
@@ -28,7 +28,7 @@ const Index = () => {
               Emergency Blood Donor Finder
             </p>
             <p className="mt-4 text-base text-muted-foreground max-w-xl mx-auto animate-fade-in stagger-3">
-              Find nearby eligible blood donors in seconds. Every drop counts — connect with donors who can save lives today.
+              Find nearby eligible blood donors in seconds. Smart matching with medical eligibility checks — every drop counts.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in-up stagger-4">
               <Link
@@ -56,8 +56,8 @@ const Index = () => {
         </p>
         <div className="mt-12 grid gap-8 sm:grid-cols-3">
           {[
-            { icon: Users, title: "Register", desc: "Sign up and register as a blood donor with your details." },
-            { icon: Search, title: "Search", desc: "Search for available donors by blood group and location." },
+            { icon: Users, title: "Register", desc: "Sign up and register as a blood donor with medical details." },
+            { icon: Search, title: "Search", desc: "Search for available donors by blood group, location, and eligibility." },
             { icon: Phone, title: "Connect", desc: "Call the best-matched donor directly and save a life." },
           ].map((step, i) => (
             <div key={i} className={`flex flex-col items-center text-center animate-fade-in-up stagger-${i + 1}`}>
@@ -93,17 +93,16 @@ const Index = () => {
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-2xl font-bold sm:text-3xl">About BloodLink</h2>
           <p className="mt-4 text-muted-foreground leading-relaxed">
-            BloodLink is a geolocation-based emergency blood donor discovery platform designed to bridge the critical gap
-            between blood donors and those in urgent need. Our smart matching algorithm connects you with the nearest,
-            most eligible donors in real time.
+            BloodLink is a geolocation-based emergency blood donor discovery platform with intelligent medical eligibility verification.
+            Our smart matching algorithm considers donor health, availability, distance, and donation history to connect you with the best donors.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               { icon: MapPin, label: "Location-Based Matching" },
-              { icon: Shield, label: "Eligibility Verified" },
+              { icon: Shield, label: "Medical Eligibility Check" },
               { icon: Heart, label: "Saving Lives Daily" },
             ].map((f, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 rounded-lg border bg-card p-4">
+              <div key={i} className="flex flex-col items-center gap-2 rounded-lg border bg-card p-4 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                 <f.icon className="h-5 w-5 text-primary" />
                 <span className="text-sm font-medium">{f.label}</span>
               </div>

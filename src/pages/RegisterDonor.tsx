@@ -1,26 +1,48 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { BLOOD_GROUPS } from "@/lib/donors";
-import { isEligible, daysSinceLastDonation } from "@/lib/eligibility";
+import { BLOOD_GROUPS, DISEASES, type Disease } from "@/lib/donors";
+import { getEligibilityStatus, daysSinceLastDonation } from "@/lib/eligibility";
 import { getCurrentPosition } from "@/lib/geo";
 import EligibilityBadge from "@/components/EligibilityBadge";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, User, Stethoscope, Navigation, ToggleLeft } from "lucide-react";
 
 const RegisterDonor = () => {
   const [form, setForm] = useState({
     name: "",
-    phone: "",
+    age: "",
+    gender: "" as "" | "Male" | "Female" | "Other",
     blood_group: "",
+    weight: "",
+    last_donation: "",
+    health_condition: "Healthy" as "Healthy" | "Not Healthy",
+    diseases: ["None"] as Disease[],
     city: "",
     area: "",
-    last_donation: "",
+    available: true,
   });
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const eligible = isEligible(form.last_donation || null);
+  const eligibility = getEligibilityStatus({
+    age: Number(form.age) || 0,
+    weight: Number(form.weight) || 0,
+    health_condition: form.health_condition,
+    diseases: form.diseases,
+    last_donation: form.last_donation || null,
+  });
   const days = daysSinceLastDonation(form.last_donation || null);
+
+  const toggleDisease = (d: Disease) => {
+    if (d === "None") {
+      setForm({ ...form, diseases: ["None"] });
+    } else {
+      const without = form.diseases.filter((x) => x !== "None");
+      const has = without.includes(d);
+      const updated = has ? without.filter((x) => x !== d) : [...without, d];
+      setForm({ ...form, diseases: updated.length === 0 ? ["None"] : updated });
+    }
+  };
 
   const captureLocation = async () => {
     setLocLoading(true);
@@ -36,18 +58,17 @@ const RegisterDonor = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.phone || !form.blood_group || !form.city || !form.area) {
+    if (!form.name || !form.age || !form.gender || !form.blood_group || !form.weight || !form.city || !form.area) {
       toast.error("Please fill all required fields");
       return;
     }
-    // In a real app this would insert into Supabase
     toast.success("Donor registration successful! Thank you for saving lives.");
     setSubmitted(true);
   };
 
   if (submitted) {
     return (
-      <div className="container flex min-h-[60vh] flex-col items-center justify-center text-center">
+      <div className="container flex min-h-[60vh] flex-col items-center justify-center text-center animate-fade-in-up">
         <div className="rounded-full bg-success/10 p-4">
           <svg className="h-12 w-12 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -55,112 +76,159 @@ const RegisterDonor = () => {
         </div>
         <h2 className="mt-4 text-2xl font-bold">Registration Complete!</h2>
         <p className="mt-2 text-muted-foreground">You are now registered as a blood donor.</p>
-        <EligibilityBadge eligible={eligible} className="mt-3 text-sm" />
+        <EligibilityBadge status={eligibility} className="mt-3 text-sm" />
       </div>
     );
   }
 
+  const inputClass = "w-full rounded-md border bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all";
+
   return (
     <div className="container py-8">
-      <div className="mx-auto max-w-lg">
-        <h1 className="text-2xl font-bold">Register as a Donor</h1>
-        <p className="mt-1 text-muted-foreground">Fill in your details to become a blood donor</p>
+      <div className="mx-auto max-w-2xl">
+        <h1 className="text-2xl font-bold animate-fade-in">Register as a Donor</h1>
+        <p className="mt-1 text-muted-foreground animate-fade-in stagger-1">Fill in your details to become a blood donor</p>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium">Full Name *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              placeholder="Enter your full name"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Phone Number *</label>
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              placeholder="Enter your phone number"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Blood Group *</label>
-            <select
-              value={form.blood_group}
-              onChange={(e) => setForm({ ...form, blood_group: e.target.value })}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Select blood group</option>
-              {BLOOD_GROUPS.map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="mb-1 block text-sm font-medium">City *</label>
-              <input
-                type="text"
-                value={form.city}
-                onChange={(e) => setForm({ ...form, city: e.target.value })}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                placeholder="City"
-              />
+        <form onSubmit={handleSubmit} className="mt-6 space-y-8">
+          {/* Personal Information */}
+          <fieldset className="rounded-lg border bg-card p-5 shadow-sm animate-fade-in-up stagger-1">
+            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-primary">
+              <User className="h-4 w-4" /> Personal Information
+            </legend>
+            <div className="mt-3 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium">Full Name *</label>
+                <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} placeholder="Enter your full name" />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Age *</label>
+                  <input type="number" min={1} max={100} value={form.age} onChange={(e) => setForm({ ...form, age: e.target.value })} className={inputClass} placeholder="Age" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Gender *</label>
+                  <select value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value as any })} className={inputClass}>
+                    <option value="">Select</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Weight (kg) *</label>
+                  <input type="number" min={1} value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} className={inputClass} placeholder="kg" />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium">Blood Group *</label>
+                <select value={form.blood_group} onChange={(e) => setForm({ ...form, blood_group: e.target.value })} className={inputClass}>
+                  <option value="">Select blood group</option>
+                  {BLOOD_GROUPS.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Area *</label>
-              <input
-                type="text"
-                value={form.area}
-                onChange={(e) => setForm({ ...form, area: e.target.value })}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-                placeholder="Area / Locality"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Last Blood Donation Date</label>
-            <input
-              type="date"
-              value={form.last_donation}
-              onChange={(e) => setForm({ ...form, last_donation: e.target.value })}
-              className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-            />
-            {form.last_donation && (
-              <div className="mt-2 flex items-center gap-2">
-                <EligibilityBadge eligible={eligible} />
-                {days !== null && (
-                  <span className="text-xs text-muted-foreground">
-                    {days} days since last donation
-                  </span>
+          </fieldset>
+
+          {/* Medical Information */}
+          <fieldset className="rounded-lg border bg-card p-5 shadow-sm animate-fade-in-up stagger-2">
+            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-primary">
+              <Stethoscope className="h-4 w-4" /> Medical Information
+            </legend>
+            <div className="mt-3 space-y-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium">Last Blood Donation Date</label>
+                <input type="date" value={form.last_donation} onChange={(e) => setForm({ ...form, last_donation: e.target.value })} className={inputClass} />
+                {form.last_donation && days !== null && (
+                  <p className="mt-1 text-xs text-muted-foreground">{days} days since last donation</p>
                 )}
               </div>
-            )}
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium">Location</label>
-            <button
-              type="button"
-              onClick={captureLocation}
-              disabled={locLoading}
-              className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors"
-            >
-              {locLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <MapPin className="h-4 w-4" />
-              )}
-              {location ? "Location Captured ✓" : "Capture My Location"}
-            </button>
-          </div>
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
+              <div>
+                <label className="mb-2 block text-sm font-medium">Health Condition *</label>
+                <div className="flex gap-2">
+                  {(["Healthy", "Not Healthy"] as const).map((val) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setForm({ ...form, health_condition: val })}
+                      className={`flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-all ${
+                        form.health_condition === val
+                          ? val === "Healthy" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
+                          : "hover:bg-muted"
+                      }`}
+                    >
+                      {val}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium">Diseases</label>
+                <div className="flex flex-wrap gap-2">
+                  {DISEASES.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => toggleDisease(d)}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
+                        form.diseases.includes(d)
+                          ? d === "None" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
+                          : "hover:bg-muted"
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {/* Live Eligibility Preview */}
+              <div className="flex items-center gap-3 rounded-md bg-muted/50 px-4 py-3">
+                <span className="text-sm text-muted-foreground">Eligibility Status:</span>
+                <EligibilityBadge status={eligibility} />
+              </div>
+            </div>
+          </fieldset>
+
+          {/* Location */}
+          <fieldset className="rounded-lg border bg-card p-5 shadow-sm animate-fade-in-up stagger-3">
+            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-primary">
+              <Navigation className="h-4 w-4" /> Location
+            </legend>
+            <div className="mt-3 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">City *</label>
+                  <input type="text" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputClass} placeholder="City" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Area *</label>
+                  <input type="text" value={form.area} onChange={(e) => setForm({ ...form, area: e.target.value })} className={inputClass} placeholder="Area / Locality" />
+                </div>
+              </div>
+              <button type="button" onClick={captureLocation} disabled={locLoading} className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted transition-colors">
+                {locLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                {location ? "Location Captured ✓" : "Capture GPS Location"}
+              </button>
+            </div>
+          </fieldset>
+
+          {/* Availability */}
+          <fieldset className="rounded-lg border bg-card p-5 shadow-sm animate-fade-in-up stagger-4">
+            <legend className="flex items-center gap-2 px-2 text-sm font-bold text-primary">
+              <ToggleLeft className="h-4 w-4" /> Availability
+            </legend>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-sm font-medium">Available for Emergency Donation?</span>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, available: !form.available })}
+                className={`relative h-7 w-12 rounded-full transition-colors ${form.available ? "bg-success" : "bg-muted"}`}
+              >
+                <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-card shadow transition-transform ${form.available ? "translate-x-5" : "translate-x-0.5"}`} />
+              </button>
+            </div>
+          </fieldset>
+
+          <button type="submit" className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] transition-all shadow-lg">
             Register as Donor
           </button>
         </form>
