@@ -6,7 +6,7 @@ const Footer = () => (
     <div className="container py-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <img src={logo} alt="BloodLink" className="h-7 w-7" />
+          <img src={logo} alt="BloodLink" className="h-10 w-10" />
           <span className="font-bold text-primary">Blood<span className="text-secondary">Link</span></span>
         </div>
         <p className="text-sm text-muted-foreground flex items-center gap-1">

@@ -60,8 +60,8 @@ const Index = () => {
             { icon: Search, title: "Search", desc: "Search for available donors by blood group and location." },
             { icon: Phone, title: "Connect", desc: "Call the best-matched donor directly and save a life." },
           ].map((step, i) => (
-            <div key={i} className="flex flex-col items-center text-center">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <div key={i} className={`flex flex-col items-center text-center animate-fade-in-up stagger-${i + 1}`}>
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary hover:scale-110 hover:bg-primary/20 transition-all duration-300">
                 <step.icon className="h-6 w-6" />
               </div>
               <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>

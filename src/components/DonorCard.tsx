@@ -12,7 +12,7 @@ interface Props {
 const DonorCard = ({ donor, emergency }: Props) => (
   <div
     className={cn(
-      "relative rounded-lg border bg-card p-5 shadow-sm transition-all hover:shadow-md",
+      "relative rounded-lg border bg-card p-5 shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-1",
       emergency && donor.available && donor.eligible && "border-emergency bg-emergency-bg pulse-emergency"
     )}
   >
