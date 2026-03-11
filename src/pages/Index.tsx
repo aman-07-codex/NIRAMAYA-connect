@@ -18,7 +18,7 @@ const Index = () => {
         <div className="container py-20 md:py-32">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-6 flex justify-center">
-              <img src={logo} alt="BloodLink" className="h-20 w-20 drop-shadow-lg" />
+              <img src={logo} alt="BloodLink" className="h-28 w-28 drop-shadow-xl animate-fade-in" />
             </div>
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
               <span className="text-primary">Blood</span>
