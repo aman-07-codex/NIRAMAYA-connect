@@ -10,13 +10,13 @@ interface Props {
 }
 
 const StatsCard = ({ title, value, icon: Icon, className, iconClassName }: Props) => (
-  <div className={cn("rounded-lg border bg-card p-5 shadow-sm", className)}>
+  <div className={cn("rounded-lg border bg-card p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300", className)}>
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm text-muted-foreground">{title}</p>
         <p className="mt-1 text-2xl font-bold text-card-foreground">{value}</p>
       </div>
-      <div className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-primary/10", iconClassName)}>
+      <div className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 hover:scale-110 transition-transform duration-200", iconClassName)}>
         <Icon className="h-5 w-5 text-primary" />
       </div>
     </div>
