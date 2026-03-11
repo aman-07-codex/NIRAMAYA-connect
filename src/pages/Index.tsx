@@ -20,26 +20,26 @@ const Index = () => {
             <div className="mb-6 flex justify-center">
               <img src={logo} alt="BloodLink" className="h-28 w-28 drop-shadow-xl animate-fade-in" />
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl animate-fade-in stagger-1">
               <span className="text-primary">Blood</span>
               <span className="text-secondary">Link</span>
             </h1>
-            <p className="mt-2 text-lg font-medium text-muted-foreground">
+            <p className="mt-2 text-lg font-medium text-muted-foreground animate-fade-in stagger-2">
               Emergency Blood Donor Finder
             </p>
-            <p className="mt-4 text-base text-muted-foreground max-w-xl mx-auto">
+            <p className="mt-4 text-base text-muted-foreground max-w-xl mx-auto animate-fade-in stagger-3">
               Find nearby eligible blood donors in seconds. Every drop counts — connect with donors who can save lives today.
             </p>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 animate-fade-in-up stagger-4">
               <Link
                 to="/search"
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 hover:scale-105 transition-all duration-200"
               >
                 <Search className="h-4 w-4" /> Find a Donor
               </Link>
               <Link
                 to="/register-donor"
-                className="inline-flex items-center gap-2 rounded-lg border-2 border-primary px-6 py-3 text-sm font-semibold text-primary hover:bg-accent transition-colors"
+                className="inline-flex items-center gap-2 rounded-lg border-2 border-primary px-6 py-3 text-sm font-semibold text-primary hover:bg-accent hover:scale-105 transition-all duration-200"
               >
                 <Droplets className="h-4 w-4" /> Become a Donor
               </Link>
