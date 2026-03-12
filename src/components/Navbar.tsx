@@ -43,12 +43,14 @@ const Navbar = () => {
             <Link
               key={l.to}
               to={l.to}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === l.to
+              className={`group px-4 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === l.to
                 ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                : "text-muted-foreground hover:text-foreground hover:bg-transparent"
                 }`}
             >
-              {l.label}
+              <span className="relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100">
+                {l.label}
+              </span>
             </Link>
           ))}
 
@@ -56,9 +58,13 @@ const Navbar = () => {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setNgoDropdownOpen(!ngoDropdownOpen)}
-              className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="group flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors"
             >
-              <Building className="h-4 w-4" /> NGO Portal <ChevronDown className={`h-3 w-3 transition-transform ${ngoDropdownOpen ? "rotate-180" : ""}`} />
+              <Building className="h-4 w-4" />
+              <span className="relative flex items-center gap-1 after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100">
+                NGO Portal
+              </span>
+              <ChevronDown className={`h-3 w-3 transition-transform ${ngoDropdownOpen ? "rotate-180" : ""}`} />
             </button>
             {ngoDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md bg-card border shadow-lg py-1 z-50 animate-fade-in-up origin-top-right">
