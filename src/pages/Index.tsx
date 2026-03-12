@@ -63,13 +63,13 @@ const Index = () => {
         </p>
         <div className="mt-12 grid gap-8 sm:grid-cols-3">
           {[
-            { icon: Users, title: "Register", desc: "Sign up and register as a blood donor with medical details." },
-            { icon: Search, title: "Search", desc: "Search for available donors by blood group, location, and eligibility." },
-            { icon: Phone, title: "Connect", desc: "Call the best-matched donor directly and save a life." },
+            { icon: Users, title: "Register", desc: "Sign up and register as a blood donor with medical details.", anim: "animate-icon-float", glow: "icon-glow-red", bg: "bg-red-50" },
+            { icon: Search, title: "Search", desc: "Search for available donors by blood group, location, and eligibility.", anim: "animate-icon-scan", glow: "icon-glow-blue", bg: "bg-blue-50" },
+            { icon: Phone, title: "Connect", desc: "Call the best-matched donor directly and save a life.", anim: "animate-icon-ring", glow: "icon-glow-red", bg: "bg-red-50" },
           ].map((step, i) => (
             <div key={i} className={`flex flex-col items-center text-center animate-fade-in-up stagger-${i + 1}`}>
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary hover:scale-110 hover:bg-primary/20 transition-all duration-300">
-                <step.icon className="h-6 w-6" />
+              <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${step.bg} ${step.glow} hover:scale-110 transition-all duration-300 cursor-pointer`}>
+                <step.icon className={`h-8 w-8 text-primary ${step.anim}`} strokeWidth={2} />
               </div>
               <h3 className="mt-4 text-lg font-semibold">{step.title}</h3>
               <p className="mt-2 text-sm text-muted-foreground">{step.desc}</p>
@@ -83,9 +83,9 @@ const Index = () => {
         <div className="container py-16">
           <h2 className="text-center text-2xl font-bold sm:text-3xl">Platform Statistics</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <StatsCard title="Total Donors" value={totalDonors} icon={Users} />
-            <StatsCard title="Available Now" value={availableDonors} icon={Heart} />
-            <StatsCard title="Eligible Donors" value={eligibleDonors} icon={Shield} />
+            <StatsCard title="Total Donors" value={totalDonors} icon={Users} animationClass="animate-icon-bounce" glowClass="icon-glow-blue" bgClass="bg-blue-50" />
+            <StatsCard title="Available Now" value={availableDonors} icon={Heart} animationClass="animate-icon-pulse-heart" glowClass="icon-glow-red" bgClass="bg-red-50" />
+            <StatsCard title="Eligible Donors" value={eligibleDonors} icon={Shield} animationClass="animate-icon-glow-shield" glowClass="icon-glow-red" bgClass="bg-red-50" />
           </div>
           <div className="mt-6 text-center">
             <Link to="/stats" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">

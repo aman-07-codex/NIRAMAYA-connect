@@ -247,6 +247,167 @@
   animation-play-state: paused;
 }
 
+/* ── Icon animation keyframes (How It Works & Stats) ── */
+
+@keyframes icon-float {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-6px) scale(1.05);
+  }
+}
+
+@keyframes icon-scan {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(5deg);
+  }
+
+  75% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes icon-ring {
+
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+
+  10% {
+    transform: rotate(-8deg) scale(1.08);
+  }
+
+  20% {
+    transform: rotate(8deg) scale(1.08);
+  }
+
+  30% {
+    transform: rotate(-5deg) scale(1.04);
+  }
+
+  40% {
+    transform: rotate(5deg) scale(1.04);
+  }
+
+  50% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes icon-bounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  30% {
+    transform: translateY(-6px);
+  }
+
+  50% {
+    transform: translateY(0);
+  }
+
+  70% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes icon-pulse-heart {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  15% {
+    transform: scale(1.15);
+  }
+
+  30% {
+    transform: scale(1);
+  }
+
+  45% {
+    transform: scale(1.1);
+  }
+
+  60% {
+    transform: scale(1);
+  }
+}
+
+@keyframes icon-glow-shield {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.2));
+    transform: scale(1);
+  }
+
+  50% {
+    filter: drop-shadow(0 0 12px rgba(239, 68, 68, 0.4));
+    transform: scale(1.06);
+  }
+}
+
+.animate-icon-float {
+  animation: icon-float 3s ease-in-out infinite;
+}
+
+.animate-icon-scan {
+  animation: icon-scan 3s ease-in-out infinite;
+}
+
+.animate-icon-ring {
+  animation: icon-ring 2.5s ease-in-out infinite;
+}
+
+.animate-icon-bounce {
+  animation: icon-bounce 2.5s ease-in-out infinite;
+}
+
+.animate-icon-pulse-heart {
+  animation: icon-pulse-heart 2s ease-in-out infinite;
+}
+
+.animate-icon-glow-shield {
+  animation: icon-glow-shield 3s ease-in-out infinite;
+}
+
+/* Shared icon glow styling */
+.icon-glow-red {
+  filter: drop-shadow(0 4px 10px rgba(239, 68, 68, 0.25));
+  transition: all 0.3s ease;
+}
+
+.icon-glow-red:hover {
+  filter: drop-shadow(0 4px 16px rgba(239, 68, 68, 0.45));
+  transform: scale(1.1);
+}
+
+.icon-glow-blue {
+  filter: drop-shadow(0 4px 10px rgba(59, 130, 246, 0.25));
+  transition: all 0.3s ease;
+}
+
+.icon-glow-blue:hover {
+  filter: drop-shadow(0 4px 16px rgba(59, 130, 246, 0.45));
+  transform: scale(1.1);
+}
+
 @keyframes float-blob {
   0% {
     transform: translate(0px, 0px) scale(1);
