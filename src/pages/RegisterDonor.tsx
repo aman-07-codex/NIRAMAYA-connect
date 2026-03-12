@@ -5,10 +5,16 @@ import { getEligibilityStatus, daysSinceLastDonation } from "@/lib/eligibility";
 import { getCurrentPosition } from "@/lib/geo";
 import EligibilityBadge from "@/components/EligibilityBadge";
 import { Loader2, MapPin, User, Stethoscope, Navigation, ToggleLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/lib/supabase";
+import { Link } from "react-router-dom";
 
 const RegisterDonor = () => {
   const [form, setForm] = useState({
     name: "",
+    phone: "",
+    email: "",
+    password: "",
     age: "",
     gender: "" as "" | "Male" | "Female" | "Other",
     blood_group: "",
@@ -22,6 +28,7 @@ const RegisterDonor = () => {
   });
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locLoading, setLocLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const eligibility = getEligibilityStatus({
@@ -56,12 +63,59 @@ const RegisterDonor = () => {
     setLocLoading(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.age || !form.gender || !form.blood_group || !form.weight || !form.city || !form.area) {
+    if (!form.name || !form.phone || !form.email || !form.password || !form.age || !form.gender || !form.blood_group || !form.weight || !form.city || !form.area) {
       toast.error("Please fill all required fields");
       return;
     }
+
+    setSubmitting(true);
+
+    // 1. Sign up the user
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+    });
+
+    if (authError) {
+      toast.error(authError.message);
+      setSubmitting(false);
+      return;
+    }
+
+    if (!authData.user) {
+      toast.error("An unknown error occurred creating the account.");
+      setSubmitting(false);
+      return;
+    }
+
+    // 2. Insert donor profile
+    const { error: dbError } = await supabase.from("donors").insert({
+      user_id: authData.user.id,
+      name: form.name,
+      phone: form.phone,
+      age: Number(form.age),
+      gender: form.gender,
+      blood_group: form.blood_group,
+      weight: Number(form.weight),
+      city: form.city,
+      area: form.area,
+      last_donation: form.last_donation || null,
+      health_condition: form.health_condition,
+      diseases: form.diseases,
+      available: form.available,
+      latitude: location?.lat || null,
+      longitude: location?.lng || null,
+    });
+
+    setSubmitting(false);
+
+    if (dbError) {
+      toast.error(dbError.message);
+      return;
+    }
+
     toast.success("Donor registration successful! Thank you for saving lives.");
     setSubmitted(true);
   };
@@ -76,7 +130,10 @@ const RegisterDonor = () => {
         </div>
         <h2 className="mt-4 text-2xl font-bold">Registration Complete!</h2>
         <p className="mt-2 text-muted-foreground">You are now registered as a blood donor.</p>
-        <EligibilityBadge status={eligibility} className="mt-3 text-sm" />
+        <EligibilityBadge status={eligibility} className="mt-3 text-sm mb-6" />
+        <Link to="/dashboard" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors">
+          Go to Dashboard
+        </Link>
       </div>
     );
   }
@@ -99,6 +156,40 @@ const RegisterDonor = () => {
               <div>
                 <label className="mb-1 block text-sm font-medium">Full Name *</label>
                 <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} placeholder="Enter your full name" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Phone Number *</label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className={inputClass}
+                    placeholder="e.g. 9876543210"
+                    inputMode="tel"
+                    pattern="[0-9]{10,}"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Email *</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className={inputClass}
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Password *</label>
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className={inputClass}
+                    placeholder="Enter a password"
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div>
@@ -150,11 +241,10 @@ const RegisterDonor = () => {
                       key={val}
                       type="button"
                       onClick={() => setForm({ ...form, health_condition: val })}
-                      className={`flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-all ${
-                        form.health_condition === val
+                      className={`flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-all ${form.health_condition === val
                           ? val === "Healthy" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
                           : "hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {val}
                     </button>
@@ -169,11 +259,10 @@ const RegisterDonor = () => {
                       key={d}
                       type="button"
                       onClick={() => toggleDisease(d)}
-                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
-                        form.diseases.includes(d)
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${form.diseases.includes(d)
                           ? d === "None" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
                           : "hover:bg-muted"
-                      }`}
+                        }`}
                     >
                       {d}
                     </button>
@@ -217,18 +306,18 @@ const RegisterDonor = () => {
               <ToggleLeft className="h-4 w-4" /> Availability
             </legend>
             <div className="mt-3 flex items-center justify-between">
-              <span className="text-sm font-medium">Available for Emergency Donation?</span>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, available: !form.available })}
-                className={`relative h-7 w-12 rounded-full transition-colors ${form.available ? "bg-success" : "bg-muted"}`}
-              >
-                <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-card shadow transition-transform ${form.available ? "translate-x-5" : "translate-x-0.5"}`} />
-              </button>
+              <label htmlFor="available-switch" className="text-sm font-medium">Available for Emergency Donation?</label>
+              <Switch
+                id="available-switch"
+                checked={form.available}
+                onCheckedChange={(val) => setForm({ ...form, available: val })}
+                className="h-7 w-12 data-[state=checked]:bg-success data-[state=unchecked]:bg-muted"
+              />
             </div>
           </fieldset>
 
-          <button type="submit" className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] transition-all shadow-lg">
+          <button disabled={submitting} type="submit" className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50 disabled:hover:scale-100">
+            {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
             Register as Donor
           </button>
         </form>

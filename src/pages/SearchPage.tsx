@@ -1,14 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
-import { AlertTriangle, Droplets, Trophy } from "lucide-react";
-import { SAMPLE_DONORS } from "@/lib/sample-data";
-import { BLOOD_GROUPS, DonorWithMeta } from "@/lib/donors";
+import { AlertTriangle, Droplets, Trophy, Bell, Loader2, XCircle } from "lucide-react";
+import { BLOOD_GROUPS, DonorWithMeta, Donor } from "@/lib/donors";
 import { getEligibilityStatus } from "@/lib/eligibility";
 import { haversineDistance, getCurrentPosition } from "@/lib/geo";
 import { calculateMatchScore } from "@/lib/matching";
 import DonorCard from "@/components/DonorCard";
-
-const CITIES = [...new Set(SAMPLE_DONORS.map((d) => d.city))];
-const AREAS = [...new Set(SAMPLE_DONORS.map((d) => d.area))];
+import { alertMatchingDonors, requestNotificationPermission, broadcastNeed } from "@/lib/alerts";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase";
 
 const SearchPage = () => {
   const [bloodGroup, setBloodGroup] = useState("");
@@ -17,22 +16,39 @@ const SearchPage = () => {
   const [emergency, setEmergency] = useState(false);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
 
+  const [rawDonors, setRawDonors] = useState<Donor[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const cities = useMemo(() => [...new Set(rawDonors.map((d) => d.city))], [rawDonors]);
+  const areas = useMemo(() => [...new Set(rawDonors.map((d) => d.area))], [rawDonors]);
+
   useEffect(() => {
-    getCurrentPosition().then(setUserPos).catch(() => {});
+    getCurrentPosition().then(setUserPos).catch(() => { });
+
+    const fetchDonors = async () => {
+      setLoading(true);
+      const { data, error } = await supabase.from('donors').select('*');
+      if (!error && data) {
+        setRawDonors(data);
+      }
+      setLoading(false);
+    };
+
+    fetchDonors();
   }, []);
 
   const results: DonorWithMeta[] = useMemo(() => {
-    let donors: DonorWithMeta[] = SAMPLE_DONORS.map((d) => {
-      const eligibility = getEligibilityStatus(d);
+    let donors: DonorWithMeta[] = rawDonors.map((d) => {
+      const eligibility = getEligibilityStatus(d as any);
       const distance =
         userPos && d.latitude && d.longitude
           ? haversineDistance(userPos.lat, userPos.lng, d.latitude, d.longitude)
           : null;
       return {
         ...d,
-        id: d.phone,
-        user_id: "",
-        created_at: "",
+        id: d.id,
+        user_id: d.user_id || "",
+        created_at: d.created_at || "",
         eligibility,
         distance,
         matchScore: 0,
@@ -46,7 +62,7 @@ const SearchPage = () => {
     if (area) donors = donors.filter((d) => d.area === area);
 
     // Calculate match scores
-    donors = donors.map((d) => ({ ...d, matchScore: calculateMatchScore(d, area || undefined) }));
+    donors = donors.map((d) => ({ ...d, matchScore: calculateMatchScore({ ...d, phone: d.phone }, area || undefined) }));
 
     // Sort by match score descending
     donors.sort((a, b) => b.matchScore - a.matchScore);
@@ -57,7 +73,7 @@ const SearchPage = () => {
     }
 
     return donors;
-  }, [bloodGroup, city, area, userPos]);
+  }, [rawDonors, bloodGroup, city, area, userPos]);
 
   const filteredForDisplay = emergency ? results.filter((d) => d.available) : results;
   const topMatches = filteredForDisplay.filter((d) => d.matchScore >= 60).slice(0, 5);
@@ -82,59 +98,83 @@ const SearchPage = () => {
           <label className="mb-1 block text-xs font-medium text-muted-foreground">City</label>
           <select value={city} onChange={(e) => setCity(e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm">
             <option value="">All Cities</option>
-            {CITIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            {cities.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div className="flex-1 min-w-[140px]">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Area</label>
           <select value={area} onChange={(e) => setArea(e.target.value)} className="w-full rounded-md border bg-background px-3 py-2 text-sm">
             <option value="">All Areas</option>
-            {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
+            {areas.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
         <button
           onClick={() => setEmergency(!emergency)}
-          className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
-            emergency
+          className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${emergency
               ? "bg-emergency text-primary-foreground pulse-emergency"
               : "border border-emergency text-emergency hover:bg-emergency-bg"
-          }`}
+            }`}
         >
           <AlertTriangle className="h-4 w-4" />
           {emergency ? "Emergency ON" : "Emergency"}
         </button>
+        <button
+          onClick={async () => {
+            const granted = await requestNotificationPermission();
+            const need = { blood_group: bloodGroup as any, city: city || undefined, area: area || undefined };
+            const count = await alertMatchingDonors(filteredForDisplay, need);
+            broadcastNeed(need);
+            if (!granted) {
+              toast.info("Browser notifications are blocked. In-app alerts were sent.");
+            }
+          }}
+          disabled={!bloodGroup || filteredForDisplay.length === 0}
+          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+          title="Send alerts to matching, eligible donors"
+        >
+          <Bell className="h-4 w-4" />
+          Notify Matching Donors
+        </button>
       </div>
 
-      {/* Best Matches Section */}
-      {topMatches.length > 0 && (
-        <div className="mb-8 animate-fade-in-up stagger-2">
-          <h2 className="flex items-center gap-2 text-lg font-bold mb-4">
-            <Trophy className="h-5 w-5 text-warning" /> Best Matches Near You
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {topMatches.map((donor) => (
-              <DonorCard key={`top-${donor.id}`} donor={donor} emergency={emergency} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* All Results */}
-      <h2 className="text-lg font-bold mb-4 animate-fade-in">All Donors ({filteredForDisplay.length})</h2>
-      {filteredForDisplay.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Droplets className="h-12 w-12 text-muted-foreground/40" />
-          <p className="mt-4 text-lg font-medium text-muted-foreground">No donors found</p>
-          <p className="text-sm text-muted-foreground">Try adjusting your search filters</p>
+      {loading ? (
+        <div className="flex justify-center p-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredForDisplay.map((donor, i) => (
-            <div key={donor.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 4)}`}>
-              <DonorCard donor={donor} emergency={emergency} />
+        <>
+          {/* Best Matches Section */}
+          {topMatches.length > 0 && (
+            <div className="mb-8 animate-fade-in-up stagger-2">
+              <h2 className="flex items-center gap-2 text-lg font-bold mb-4">
+                <Trophy className="h-5 w-5 text-warning" /> Best Matches Near You
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {topMatches.map((donor) => (
+                  <DonorCard key={`top-${donor.id}`} donor={donor} emergency={emergency} />
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* All Results */}
+          <h2 className="text-lg font-bold mb-4 animate-fade-in">All Donors ({filteredForDisplay.length})</h2>
+          {filteredForDisplay.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Droplets className="h-12 w-12 text-muted-foreground/40" />
+              <p className="mt-4 text-lg font-medium text-muted-foreground">No donors found</p>
+              <p className="text-sm text-muted-foreground">Try adjusting your search filters</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredForDisplay.map((donor, i) => (
+                <div key={donor.id} className={`animate-fade-in-up stagger-${Math.min(i + 1, 4)}`}>
+                  <DonorCard donor={donor} emergency={emergency} />
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );
