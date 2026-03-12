@@ -12,6 +12,13 @@ import Dashboard from "./pages/Dashboard";
 import StatsPage from "./pages/StatsPage";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+
+import NgoLogin from "./pages/ngo/NgoLogin";
+import NgoRegister from "./pages/ngo/NgoRegister";
+import NgoDashboard from "./pages/ngo/NgoDashboard";
+import NgoInventory from "./pages/ngo/NgoInventory";
+import NgoRequests from "./pages/ngo/NgoRequests";
+import NgoAnalytics from "./pages/ngo/NgoAnalytics";
 import { AuthProvider, useAuth } from "./lib/AuthProvider";
 import { Loader2 } from "lucide-react";
 
@@ -50,6 +57,15 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/register-donor" element={<RegisterDonor />} />
                 <Route path="/login" element={<Login />} />
+
+                {/* NGO Routes */}
+                <Route path="/ngo-login" element={<NgoLogin />} />
+                <Route path="/ngo-register" element={<NgoRegister />} />
+                <Route path="/ngo-dashboard" element={<ProtectedRoute><NgoDashboard /></ProtectedRoute>} />
+                <Route path="/ngo-inventory" element={<ProtectedRoute><NgoInventory /></ProtectedRoute>} />
+                <Route path="/ngo-requests" element={<ProtectedRoute><NgoRequests /></ProtectedRoute>} />
+                <Route path="/ngo-analytics" element={<ProtectedRoute><NgoAnalytics /></ProtectedRoute>} />
+
                 <Route
                   path="/dashboard"
                   element={
