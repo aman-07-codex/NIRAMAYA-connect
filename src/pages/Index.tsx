@@ -18,7 +18,7 @@ const Index = () => {
         <div className="container py-20 md:py-32">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-6 flex justify-center">
-              <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-28 w-28 drop-shadow-xl animate-fade-in" />
+              <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-44 w-44 drop-shadow-xl animate-fade-in object-contain" />
             </div>
             <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl font-brand animate-fade-in stagger-1">
               <span className="text-primary">NIRA</span>

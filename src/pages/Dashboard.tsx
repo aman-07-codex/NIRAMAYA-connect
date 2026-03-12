@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, Calendar, MapPin, Stethoscope, Activity, Shield, Loader2 } from "lucide-react";
+import { User, Calendar, MapPin, Stethoscope, Activity, Shield, Loader2, Bell, AlertTriangle } from "lucide-react";
 import EligibilityBadge from "@/components/EligibilityBadge";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import { getEligibilityStatus, daysSinceLastDonation } from "@/lib/eligibility";
@@ -9,10 +9,18 @@ import type { PatientNeed } from "@/lib/alerts";
 import { useAuth } from "@/lib/AuthProvider";
 import { supabase } from "@/lib/supabase";
 
+type AppNotification = {
+  id: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+};
+
 const Dashboard = () => {
   const { user } = useAuth();
   const [donor, setDonor] = useState<Donor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -26,6 +34,16 @@ const Dashboard = () => {
 
       if (!error && data) {
         setDonor(data as Donor);
+
+        const { data: notifData } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("donor_id", data.id)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (notifData) {
+          setNotifications(notifData as AppNotification[]);
+        }
       }
       setLoading(false);
     };
@@ -55,33 +73,30 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    const onMessage = (payload: any) => {
-      try {
-        const data = typeof payload === "string" ? JSON.parse(payload) : payload;
-        if (data?.type === "ALERT" && donor) {
-          const need = data.need as PatientNeed;
-          if (need && donor.available && donor.blood_group === need.blood_group) {
-            toast.info(`Urgent request for ${need.blood_group}${need.city ? ` in ${need.city}` : ""}`);
-          }
+    if (!donor) return;
+
+    const channel = supabase
+      .channel("public:notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `donor_id=eq.${donor.id}`
+        },
+        (payload) => {
+          const newNotif = payload.new as AppNotification;
+          setNotifications((prev) => [newNotif, ...prev].slice(0, 5));
+          toast.info("New Donor Alert! Check your dashboard notifications.");
         }
-      } catch { }
-    };
-    let ch: any = null;
-    // @ts-ignore
-    if (typeof window !== "undefined" && "BroadcastChannel" in window) {
-      // @ts-ignore
-      ch = new BroadcastChannel("donor-alerts");
-      ch.onmessage = (e: any) => onMessage(e.data);
-    }
-    const storageHandler = (e: StorageEvent) => {
-      if (e.key === "donor-alerts" && e.newValue) onMessage(e.newValue);
-    };
-    window.addEventListener("storage", storageHandler);
+      )
+      .subscribe();
+
     return () => {
-      if (ch) ch.close();
-      window.removeEventListener("storage", storageHandler);
+      supabase.removeChannel(channel);
     };
-  }, [donor?.available, donor?.blood_group]);
+  }, [donor?.id]);
 
 
   if (loading) {
@@ -169,8 +184,8 @@ const Dashboard = () => {
             <button
               onClick={toggleAvailability}
               className={`w-full rounded-lg px-4 py-2.5 text-sm font-semibold transition-all hover:scale-[1.02] ${donor.available
-                  ? "bg-muted text-muted-foreground hover:bg-muted/80"
-                  : "bg-success text-success-foreground hover:bg-success/90"
+                ? "bg-muted text-muted-foreground hover:bg-muted/80"
+                : "bg-success text-success-foreground hover:bg-success/90"
                 }`}
             >
               {donor.available ? "Set as Busy" : "Set as Available"}
@@ -202,6 +217,28 @@ const Dashboard = () => {
               <p className="text-xs text-muted-foreground mb-1">Eligibility</p>
               <EligibilityBadge status={eligibility} />
             </div>
+          </div>
+        </div>
+
+        {/* Notifications Card */}
+        <div className="rounded-lg border bg-card p-6 shadow-sm md:col-span-2 animate-fade-in-up stagger-4">
+          <h3 className="font-semibold flex items-center gap-2 mb-4"><Bell className="h-4 w-4 text-primary" /> Recent Alerts</h3>
+          <div className="space-y-4">
+            {notifications.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No recent alerts.</p>
+            ) : (
+              notifications.map((notif) => (
+                <div key={notif.id} className="flex items-start gap-3 rounded-md bg-muted/30 p-3">
+                  <div className="mt-0.5 rounded-full bg-warning/10 p-1.5 text-warning">
+                    <AlertTriangle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{notif.message}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{new Date(notif.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

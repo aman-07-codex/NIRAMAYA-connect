@@ -110,9 +110,9 @@ const SearchPage = () => {
         </div>
         <button
           onClick={() => setEmergency(!emergency)}
-          className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${emergency
-              ? "bg-emergency text-primary-foreground pulse-emergency"
-              : "border border-emergency text-emergency hover:bg-emergency-bg"
+          className={`inline-flex flex-1 md:flex-none justify-center items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-colors ${emergency
+            ? "bg-emergency text-primary-foreground pulse-emergency"
+            : "border border-emergency text-emergency hover:bg-emergency-bg"
             }`}
         >
           <AlertTriangle className="h-4 w-4" />
@@ -129,7 +129,7 @@ const SearchPage = () => {
             }
           }}
           disabled={!bloodGroup || filteredForDisplay.length === 0}
-          className="inline-flex items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50"
+          className="inline-flex flex-1 md:flex-none justify-center items-center gap-2 rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50"
           title="Send alerts to matching, eligible donors"
         >
           <Bell className="h-4 w-4" />

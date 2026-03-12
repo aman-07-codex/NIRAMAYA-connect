@@ -6,7 +6,7 @@ const Footer = () => (
     <div className="container py-8">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-10 w-10" />
+          <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-20 w-20" />
           <span className="font-bold font-brand text-primary">NIRA<span className="text-secondary">MAYA</span></span>
         </div>
         <p className="text-sm text-muted-foreground flex items-center gap-1">

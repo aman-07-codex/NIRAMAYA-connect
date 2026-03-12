@@ -18,9 +18,9 @@ const Navbar = () => {
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container flex h-20 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-12 w-12" />
+          <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-16 w-16 object-contain" />
           <span className="text-xl font-bold font-brand text-primary">NIRA<span className="text-secondary">MAYA</span></span>
         </Link>
 
@@ -31,8 +31,8 @@ const Navbar = () => {
               key={l.to}
               to={l.to}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === l.to
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
             >
               {l.label}
