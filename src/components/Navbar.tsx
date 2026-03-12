@@ -39,29 +39,33 @@ const Navbar = () => {
 
         {/* Desktop */}
         <div className="hidden md:flex items-center gap-1 relative">
-          {NAV_LINKS.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className={`group px-4 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname === l.to
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-transparent"
-                }`}
-            >
-              <span className="relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100">
-                {l.label}
-              </span>
-            </Link>
-          ))}
+          {NAV_LINKS.map((l) => {
+            const isActive = location.pathname === l.to;
+            return (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={`group px-4 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
+                  ? "text-primary bg-transparent"
+                  : "text-muted-foreground hover:text-foreground hover:bg-transparent"
+                  }`}
+              >
+                <span className={`relative after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:bg-primary after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100 ${isActive ? "after:scale-x-100 after:origin-bottom-left font-semibold" : "after:scale-x-0"}`}>
+                  {l.label}
+                </span>
+              </Link>
+            )
+          })}
 
           {/* NGO Portal Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setNgoDropdownOpen(!ngoDropdownOpen)}
-              className="group flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-transparent transition-colors"
+              className={`group flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${ngoDropdownOpen || location.pathname.includes('/ngo-') ? "text-primary bg-transparent" : "text-muted-foreground hover:text-foreground hover:bg-transparent"
+                }`}
             >
               <Building className="h-4 w-4" />
-              <span className="relative flex items-center gap-1 after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:scale-x-0 after:bg-primary after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100">
+              <span className={`relative flex items-center gap-1 after:absolute after:bottom-[-4px] after:left-0 after:h-[2px] after:w-full after:origin-bottom-right after:bg-primary after:transition-transform after:duration-300 group-hover:after:origin-bottom-left group-hover:after:scale-x-100 ${ngoDropdownOpen || location.pathname.includes('/ngo-') ? "after:scale-x-100 after:origin-bottom-left font-semibold" : "after:scale-x-0"}`}>
                 NGO Portal
               </span>
               <ChevronDown className={`h-3 w-3 transition-transform ${ngoDropdownOpen ? "rotate-180" : ""}`} />
