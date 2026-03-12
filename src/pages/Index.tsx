@@ -5,6 +5,7 @@ import { BLOOD_GROUPS } from "@/lib/donors";
 import { SAMPLE_DONORS } from "@/lib/sample-data";
 import { getEligibilityStatus } from "@/lib/eligibility";
 import StatsCard from "@/components/StatsCard";
+import AnimatedBackground from "@/components/AnimatedBackground";
 
 const Index = () => {
   const totalDonors = SAMPLE_DONORS.length;
@@ -14,8 +15,9 @@ const Index = () => {
   return (
     <div className="flex flex-col">
       {/* Hero */}
-      <section className="relative overflow-hidden gradient-hero">
-        <div className="container py-20 md:py-32">
+      <section className="relative overflow-hidden min-h-[90vh] flex items-center justify-center">
+        <AnimatedBackground />
+        <div className="container py-20 md:py-32 relative z-10">
           <div className="mx-auto max-w-3xl text-center">
             <div className="mb-6 flex justify-center animate-fade-in">
               <img src="/logo.png" onError={(e) => (e.currentTarget.src = logo)} alt="NIRAMAYA" className="h-44 w-44 object-contain animate-heartbeat" />
