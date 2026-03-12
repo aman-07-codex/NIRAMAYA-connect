@@ -56,7 +56,31 @@ const RegisterDonor = () => {
     try {
       const pos = await getCurrentPosition();
       setLocation(pos);
-      toast.success("Location captured successfully!");
+
+      // Perform Reverse Geocoding
+      try {
+        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${pos.lat}&longitude=${pos.lng}&localityLanguage=en`);
+        if (response.ok) {
+          const data = await response.json();
+          // Fallback through location properties usually provided by BigDataCloud
+          const city = data.city || data.principalSubdivision || "";
+          const area = data.locality || "";
+
+          setForm(prev => ({
+            ...prev,
+            city: city,
+            area: area
+          }));
+
+          toast.success("Location captured and auto-filled!");
+        } else {
+          toast.success("Location captured! Please enter city manually.");
+        }
+      } catch (geocodeError) {
+        console.error("Geocoding failed:", geocodeError);
+        toast.success("Location captured! Please enter city manually.");
+      }
+
     } catch {
       toast.error("Could not get your location. Please allow location access.");
     }
@@ -242,8 +266,8 @@ const RegisterDonor = () => {
                       type="button"
                       onClick={() => setForm({ ...form, health_condition: val })}
                       className={`flex-1 rounded-md border px-4 py-2 text-sm font-medium transition-all ${form.health_condition === val
-                          ? val === "Healthy" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
-                          : "hover:bg-muted"
+                        ? val === "Healthy" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
+                        : "hover:bg-muted"
                         }`}
                     >
                       {val}
@@ -260,8 +284,8 @@ const RegisterDonor = () => {
                       type="button"
                       onClick={() => toggleDisease(d)}
                       className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${form.diseases.includes(d)
-                          ? d === "None" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
-                          : "hover:bg-muted"
+                        ? d === "None" ? "bg-success/10 border-success text-success" : "bg-destructive/10 border-destructive text-destructive"
+                        : "hover:bg-muted"
                         }`}
                     >
                       {d}

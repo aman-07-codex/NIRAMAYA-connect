@@ -159,3 +159,36 @@
 .stagger-2 { animation-delay: 0.2s; }
 .stagger-3 { animation-delay: 0.3s; }
 .stagger-4 { animation-delay: 0.4s; }
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 20px 25px rgb(0 0 0 / 0.1)) drop-shadow(0 8px 10px rgb(0 0 0 / 0.1));
+  }
+  14% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.5));
+  }
+  28% {
+    transform: scale(1);
+    filter: drop-shadow(0 20px 25px rgb(0 0 0 / 0.1)) drop-shadow(0 8px 10px rgb(0 0 0 / 0.1));
+  }
+  42% {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.5));
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 20px 25px rgb(0 0 0 / 0.1)) drop-shadow(0 8px 10px rgb(0 0 0 / 0.1));
+  }
+}
+
+.animate-heartbeat {
+  /* 72 BPM = 1.2 beats / sec = 0.833 seconds per full cycle */
+  animation: heartbeat 0.833s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform, filter;
+}
+.animate-heartbeat:hover {
+  animation-play-state: paused;
+}
