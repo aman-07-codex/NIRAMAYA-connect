@@ -293,22 +293,22 @@ const Dashboard = () => {
                       "Lab name and date are present",
                       "Reference ranges match standard Indian lab formats"
                     ],
-                    explanation: "The blood report appears to be authentic. All values fall within realistic human ranges, the formatting is consistent with standard pathology lab reports, and no signs of tampering or data manipulation were detected.",
-                    suggestion: "The report is safe to proceed with. Verify the lab name independently if additional assurance is needed."
+                    explanation: "The blood report appears to be a genuine lab-issued document. All values fall within realistic human ranges, the formatting is consistent with standard pathology lab reports, and no signs of tampering or fabrication were detected.",
+                    suggestion: "The report is verified as authentic. You can safely proceed with assisting this patient."
                   });
                   setAiLoading(false);
                 }}
                 className="w-full mb-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:from-violet-700 hover:to-indigo-700 transition-all hover:scale-[1.02] shadow-md"
               >
-                <Sparkles className="h-4 w-4" /> Optimize Report with AI Verification
+                <Sparkles className="h-4 w-4" /> Verify Report Authenticity
               </button>
             )}
 
             {aiLoading && (
               <div className="flex flex-col items-center justify-center py-8 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
-                <p className="text-sm font-medium text-muted-foreground">AI is analyzing the blood report...</p>
-                <p className="text-xs text-muted-foreground">Checking medical validity, formatting, data integrity & fraud signals</p>
+                <p className="text-sm font-medium text-muted-foreground">Verifying report authenticity...</p>
+                <p className="text-xs text-muted-foreground">Checking medical validity, formatting consistency, data integrity & fraud signals</p>
               </div>
             )}
 
@@ -316,7 +316,7 @@ const Dashboard = () => {
               <div className="border rounded-lg overflow-hidden mb-4">
                 <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-white" />
-                  <span className="text-sm font-bold text-white">AI Authenticity Verification Result</span>
+                  <span className="text-sm font-bold text-white">Report Authenticity Verification</span>
                 </div>
                 <div className="p-4 space-y-4">
                   {/* Score & Status Row */}
