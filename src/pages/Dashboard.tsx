@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, Calendar, MapPin, Stethoscope, Activity, Shield, Loader2, Bell, AlertTriangle } from "lucide-react";
+import { User, Calendar, MapPin, Stethoscope, Activity, Shield, Loader2, Bell, AlertTriangle, Sparkles, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import EligibilityBadge from "@/components/EligibilityBadge";
 import AvailabilityBadge from "@/components/AvailabilityBadge";
 import { getEligibilityStatus, daysSinceLastDonation } from "@/lib/eligibility";
@@ -22,6 +22,8 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -236,9 +238,12 @@ const Dashboard = () => {
                   <div className="flex-1">
                     <p className="text-sm font-medium">{notif.message}</p>
                     <p className="text-xs text-muted-foreground mt-1">{new Date(notif.created_at).toLocaleString()}</p>
-                    {notif.message.toLowerCase().includes("blood report") && (
+                    {(notif.message.toLowerCase().includes("sent their report") || notif.message.toLowerCase().includes("blood report")) && (
                       <button 
-                        onClick={() => setShowReportModal(true)}
+                        onClick={() => {
+                          setShowReportModal(true);
+                          setAiResult(null);
+                        }}
                         className="mt-2 text-xs font-semibold text-primary hover:underline"
                       >
                         View Report
@@ -252,25 +257,125 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Report Viewer Modal */}
+      {/* Report Viewer Modal with AI Verification */}
       {showReportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-lg border bg-card p-6 shadow-lg animate-in fade-in zoom-in-95">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg border bg-card p-6 shadow-lg animate-in fade-in zoom-in-95">
             <h3 className="text-lg font-bold mb-4">Patient Blood Report</h3>
             <div className="border bg-muted/20 rounded-md p-4 mb-4">
-              <div className="flex justify-between border-b pb-2 mb-2">
+              <div className="flex justify-between border-b pb-2 mb-3">
                 <span className="text-sm font-semibold text-muted-foreground">Document Viewer</span>
+                <span className="text-xs bg-warning/10 text-warning px-2 py-0.5 rounded-full font-medium">Emergency</span>
               </div>
               <p className="text-sm mb-1"><strong>Status:</strong> Emergency Review Requested</p>
               <p className="text-sm mb-1"><strong>Document Type:</strong> Standard Blood Panel (PDF)</p>
-              <p className="text-sm text-muted-foreground mt-4 italic">
+              <p className="text-sm mb-1"><strong>Submitted:</strong> {new Date().toLocaleString()}</p>
+              <p className="text-sm text-muted-foreground mt-3 italic">
                 [Simulated View] The patient's uploaded blood report document would be rendered here in a production environment.
               </p>
             </div>
+
+            {/* AI Verification Section */}
+            {!aiResult && !aiLoading && (
+              <button
+                onClick={async () => {
+                  setAiLoading(true);
+                  // Simulate AI processing delay
+                  await new Promise(r => setTimeout(r, 2500));
+                  // Simulated AI verification result
+                  setAiResult({
+                    authenticity_score: 87,
+                    status: "Authentic",
+                    confidence: 92,
+                    flags: [
+                      "Hemoglobin value is within normal range",
+                      "All CBC parameters are medically consistent",
+                      "Lab name and date are present",
+                      "Reference ranges match standard Indian lab formats"
+                    ],
+                    explanation: "The blood report appears to be authentic. All values fall within realistic human ranges, the formatting is consistent with standard pathology lab reports, and no signs of tampering or data manipulation were detected.",
+                    suggestion: "The report is safe to proceed with. Verify the lab name independently if additional assurance is needed."
+                  });
+                  setAiLoading(false);
+                }}
+                className="w-full mb-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white hover:from-violet-700 hover:to-indigo-700 transition-all hover:scale-[1.02] shadow-md"
+              >
+                <Sparkles className="h-4 w-4" /> Optimize Report with AI Verification
+              </button>
+            )}
+
+            {aiLoading && (
+              <div className="flex flex-col items-center justify-center py-8 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+                <p className="text-sm font-medium text-muted-foreground">AI is analyzing the blood report...</p>
+                <p className="text-xs text-muted-foreground">Checking medical validity, formatting, data integrity & fraud signals</p>
+              </div>
+            )}
+
+            {aiResult && (
+              <div className="border rounded-lg overflow-hidden mb-4">
+                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-3 flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-white" />
+                  <span className="text-sm font-bold text-white">AI Authenticity Verification Result</span>
+                </div>
+                <div className="p-4 space-y-4">
+                  {/* Score & Status Row */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-md bg-muted/50 p-3 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Authenticity Score</p>
+                      <span className={`text-2xl font-bold ${
+                        aiResult.authenticity_score >= 70 ? "text-success" : aiResult.authenticity_score >= 40 ? "text-warning" : "text-destructive"
+                      }`}>{aiResult.authenticity_score}/100</span>
+                    </div>
+                    <div className="rounded-md bg-muted/50 p-3 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Status</p>
+                      <span className={`inline-flex items-center gap-1 text-sm font-bold ${
+                        aiResult.status === "Authentic" ? "text-success" : aiResult.status === "Suspicious" ? "text-warning" : "text-destructive"
+                      }`}>
+                        {aiResult.status === "Authentic" ? <CheckCircle className="h-4 w-4" /> : aiResult.status === "Suspicious" ? <AlertCircle className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                        {aiResult.status}
+                      </span>
+                    </div>
+                    <div className="rounded-md bg-muted/50 p-3 text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Confidence</p>
+                      <span className="text-2xl font-bold text-primary">{aiResult.confidence}%</span>
+                    </div>
+                  </div>
+
+                  {/* Flags */}
+                  <div>
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Analysis Flags</p>
+                    <div className="space-y-1.5">
+                      {aiResult.flags.map((flag: string, i: number) => (
+                        <div key={i} className="flex items-start gap-2 text-sm">
+                          <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-success flex-shrink-0" />
+                          <span>{flag}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Explanation */}
+                  <div className="rounded-md bg-success/5 border border-success/20 p-3">
+                    <p className="text-xs font-semibold text-success mb-1">Explanation</p>
+                    <p className="text-sm">{aiResult.explanation}</p>
+                  </div>
+
+                  {/* Suggestion */}
+                  <div className="rounded-md bg-primary/5 border border-primary/20 p-3">
+                    <p className="text-xs font-semibold text-primary mb-1">Suggestion</p>
+                    <p className="text-sm">{aiResult.suggestion}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-end gap-2">
               <button 
-                onClick={() => setShowReportModal(false)}
+                onClick={() => {
+                  setShowReportModal(false);
+                  setAiResult(null);
+                }}
                 className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Close Report

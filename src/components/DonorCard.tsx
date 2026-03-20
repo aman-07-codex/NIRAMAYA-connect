@@ -19,7 +19,7 @@ const DonorCard = ({ donor, emergency }: Props) => {
     setIsSending(true);
     const { error } = await supabase.from("notifications").insert({
       donor_id: donor.id,
-      message: "An emergency patient has requested review of their blood report.",
+      message: "The Emergency Patient has sent their report.",
       is_read: false
     });
     
