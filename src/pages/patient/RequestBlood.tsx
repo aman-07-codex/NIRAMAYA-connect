@@ -8,6 +8,7 @@ import {
   Syringe,
   Activity,
   CheckCircle2,
+  Hospital,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/AuthProvider";
@@ -33,6 +34,7 @@ const RequestBlood = () => {
   const [units, setUnits] = useState<number | "">("");
   const [urgency, setUrgency] = useState<UrgencyType>("Low");
   const [selectedHospitalId, setSelectedHospitalId] = useState("");
+  const [manualLocation, setManualLocation] = useState("");
 
   const [hospitals, setHospitals] = useState<any[]>([]);
   const [fetchingHospitals, setFetchingHospitals] = useState(true);
@@ -62,7 +64,7 @@ const RequestBlood = () => {
       return;
     }
 
-    if (!bloodGroup || !units || !selectedHospitalId) {
+    if (!bloodGroup || !units || (!selectedHospitalId && !manualLocation.trim())) {
       toast.error("Please fill in all required fields.");
       return;
     }
@@ -71,8 +73,13 @@ const RequestBlood = () => {
     const dbUrgency = urgency === "High" ? "High" : "Normal";
 
     // Grab hospital details to populate the mandatory 'location' text field
-    const selectedHospital = hospitals.find((h) => h.id === selectedHospitalId);
-    const locationText = selectedHospital ? `${selectedHospital.hospital_name}, ${selectedHospital.city}` : "Unknown Location";
+    let locationText = manualLocation.trim();
+    if (selectedHospitalId) {
+      const selectedHospital = hospitals.find((h) => h.id === selectedHospitalId);
+      if (selectedHospital) {
+        locationText = `${selectedHospital.hospital_name}, ${selectedHospital.city}`;
+      }
+    }
 
     setLoading(true);
     try {
@@ -96,6 +103,7 @@ const RequestBlood = () => {
       setUnits("");
       setUrgency("Low");
       setSelectedHospitalId("");
+      setManualLocation("");
       
       // Auto-hide success state after a few seconds
       setTimeout(() => setSuccess(false), 5000);
@@ -154,7 +162,7 @@ const RequestBlood = () => {
                   required
                   value={bloodGroup}
                   onChange={(e) => setBloodGroup(e.target.value)}
-                  className="w-full appearance-none rounded-xl border bg-background px-4 py-3.5 pr-10 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full appearance-none rounded-xl border bg-background px-4 py-3.5 pl-10 pr-10 text-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
                 >
                   <option value="" disabled>Select group</option>
                   {BLOOD_GROUPS.map((bg) => (
@@ -163,7 +171,7 @@ const RequestBlood = () => {
                     </option>
                   ))}
                 </select>
-                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 group-hover:text-primary transition-colors">
                   <Droplets className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
@@ -182,7 +190,7 @@ const RequestBlood = () => {
                   value={units}
                   onChange={(e) => setUnits(Number(e.target.value) || "")}
                   placeholder="e.g. 2"
-                  className="w-full rounded-xl border bg-background px-4 py-3.5 pl-10 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  className="w-full rounded-xl border bg-background px-4 py-3.5 pl-10 text-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
                 />
                 <Syringe className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               </div>
@@ -190,37 +198,63 @@ const RequestBlood = () => {
           </div>
 
           {/* Location / Hospital */}
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground flex items-center gap-2">
-              Select Hospital / Blood Bank <span className="text-destructive">*</span>
-            </label>
-            <div className="relative">
-              <select
-                required
-                value={selectedHospitalId}
-                onChange={(e) => setSelectedHospitalId(e.target.value)}
-                disabled={fetchingHospitals}
-                className="w-full appearance-none rounded-xl border bg-background px-4 py-3.5 pl-10 pr-10 text-sm outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
-              >
-                <option value="" disabled>
-                  {fetchingHospitals ? "Loading registered providers..." : "Select near you"}
-                </option>
-                {hospitals.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.hospital_name} ({h.hospital_type}) - {h.city}
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                Select Hospital / Blood Bank <span className="text-muted-foreground font-normal">(Optional)</span>
+              </label>
+              <div className="relative group">
+                <select
+                  value={selectedHospitalId}
+                  onChange={(e) => {
+                    setSelectedHospitalId(e.target.value);
+                    if (e.target.value) setManualLocation("");
+                  }}
+                  disabled={fetchingHospitals}
+                  className="w-full appearance-none rounded-xl border bg-background px-4 py-3.5 pl-10 pr-10 text-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/10 disabled:opacity-50"
+                >
+                  <option value="">
+                    {fetchingHospitals ? "Loading registered providers..." : "I don't know / Not listed"}
                   </option>
-                ))}
-              </select>
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
-                 <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                 </svg>
+                  {hospitals.map((h) => (
+                    <option key={h.id} value={h.id}>
+                      {h.hospital_name} ({h.hospital_type}) - {h.city}
+                    </option>
+                  ))}
+                </select>
+                <Hospital className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 flex items-center">
+                   <svg className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                   </svg>
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground ml-1">
+                If selected, your request will be directly visible to this facility.
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground ml-1">
-              Your request will be directly visible to the selected facility.
-            </p>
+
+            {!selectedHospitalId && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  City / Area <span className="text-destructive">*</span>
+                </label>
+                <div className="relative group">
+                  <input
+                    type="text"
+                    required
+                    value={manualLocation}
+                    onChange={(e) => setManualLocation(e.target.value)}
+                    placeholder="e.g. Bandra, Mumbai"
+                    className="w-full rounded-xl border bg-background px-4 py-3.5 pl-10 text-sm outline-none transition-all hover:border-primary/50 focus:border-primary focus:ring-4 focus:ring-primary/10"
+                  />
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <p className="text-xs text-muted-foreground ml-1">
+                  We need your location to alert nearby donors.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Urgency Selection */}
@@ -234,10 +268,10 @@ const RequestBlood = () => {
                 return (
                   <label
                     key={level.id}
-                    className={`relative flex cursor-pointer flex-col gap-1 rounded-xl border-2 p-4 transition-all duration-200 ${
+                    className={`relative flex cursor-pointer flex-col gap-1 rounded-xl border-2 p-4 transition-all duration-300 ${
                       isSelected
-                        ? `${level.border} ${level.bg} ring-1 ${level.ring}`
-                        : "border-border hover:bg-muted/50"
+                        ? `${level.border} ${level.bg} ring-2 ring-offset-1 ${level.ring} scale-[1.02] shadow-sm`
+                        : "border-border hover:bg-muted/50 hover:border-primary/30 hover:scale-[1.01]"
                     }`}
                   >
                     <input

@@ -221,6 +221,15 @@ export async function sendMessage(
       throw error;
     }
 
+    // If the edge function returned an error message, treat it as a failure
+    if (
+      data?.response &&
+      (data.response.includes("having trouble connecting") ||
+        data.response.includes("trouble responding"))
+    ) {
+      throw new Error("Edge function returned error response");
+    }
+
     if (data?.response && data?.conversationId) {
       return data as ChatResponse;
     }
@@ -229,54 +238,53 @@ export async function sendMessage(
   } catch (err) {
     console.warn("AI API unavailable, using smart fallback:", err);
 
-    // ── Fallback: save to DB locally and generate response ──
     let fallbackConvId = conversationId;
-
-    // Create conversation if needed
-    if (!fallbackConvId) {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (user) {
-        const { data: newConv } = await supabase
-          .from("ai_conversations")
-          .insert({ patient_id: user.id })
-          .select("id")
-          .single();
-        if (newConv) {
-          fallbackConvId = newConv.id;
-        }
-      }
-    }
-
-    // Save user message
-    if (fallbackConvId) {
-      await supabase.from("ai_messages").insert({
-        conversation_id: fallbackConvId,
-        sender: "patient",
-        message,
-      });
-    }
-
-    // Generate smart fallback
     const fallbackResponse = generateFallbackResponse(message);
-
-    // Append disclaimer
     const fullResponse =
       fallbackResponse +
       "\n\n---\n*⚕️ Disclaimer: This AI provides general health guidance only. Always consult a qualified medical professional for diagnosis and treatment.*";
 
-    // Save AI response
-    if (fallbackConvId) {
-      await supabase.from("ai_messages").insert({
-        conversation_id: fallbackConvId,
-        sender: "ai",
-        message: fullResponse,
-      });
+    try {
+      // ── Fallback: save to DB locally ──
+      // Create conversation if needed
+      if (!fallbackConvId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const { data: newConv } = await supabase
+            .from("ai_conversations")
+            .insert({ patient_id: user.id })
+            .select("id");
+          if (newConv && newConv.length > 0) {
+            fallbackConvId = newConv[0].id;
+          }
+        }
+      }
+
+      // Save user message
+      if (fallbackConvId) {
+        await supabase.from("ai_messages").insert({
+          conversation_id: fallbackConvId,
+          sender: "patient",
+          message,
+        });
+      }
+
+      // Save AI response
+      if (fallbackConvId) {
+        await supabase.from("ai_messages").insert({
+          conversation_id: fallbackConvId,
+          sender: "ai",
+          message: fullResponse,
+        });
+      }
+    } catch (fallbackDbErr) {
+      console.warn("Could not save fallback messages to db:", fallbackDbErr);
     }
 
     return {
-      conversationId: fallbackConvId || "demo-" + Date.now(),
+      conversationId: fallbackConvId || "demo-" + Date.now().toString(),
       response: fullResponse,
     };
   }

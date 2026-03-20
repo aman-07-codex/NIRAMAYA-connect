@@ -30,11 +30,12 @@ const HospitalProfile = () => {
           .from("hospitals")
           .select("*")
           .eq("id", user.id)
-          .single();
+          .maybeSingle();
 
         if (error) throw error;
         setProfile(data);
       } catch (error: any) {
+        console.error(error);
         toast.error("Failed to load profile");
       } finally {
         setIsLoading(false);
@@ -52,7 +53,20 @@ const HospitalProfile = () => {
     );
   }
 
-  if (!profile) return null;
+  if (!profile) {
+    return (
+      <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6 mt-10">
+        <div className="bg-rose-50 border border-rose-200 text-rose-800 p-8 rounded-2xl text-center shadow-sm">
+          <Building2 className="h-12 w-12 text-rose-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Hospital Profile Not Found</h2>
+          <p className="max-w-md mx-auto text-rose-700/80">
+            We couldn't find a hospital profile linked to this account. 
+            This usually happens if you are currently logged in with a <b>Patient</b> account instead of a registered Hospital account.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-6">

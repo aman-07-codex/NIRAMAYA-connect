@@ -46,7 +46,7 @@ const roleConfig: Record<Role, { subtitle: string; redirect: string; registerLin
   },
   hospital: {
     subtitle: "Manage blood requirements and transfusion records",
-    redirect: "/dashboard",
+    redirect: "/hospital/dashboard",
     registerLink: "/select-role",
     registerLabel: "Register Hospital",
   },
